@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fleet Guard - Revenue Assurance POC</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        
+        // TODO: Paste your Firebase config here later
+       const firebaseConfig = {
+  apiKey: "AIzaSyB9mEvtJKZ9aGgXADgWm6EOhOA_UYQqkjc",
+  authDomain: "seat-pressure-monitoring.firebaseapp.com",
+  databaseURL: "https://seat-pressure-monitoring-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "seat-pressure-monitoring",
+  storageBucket: "seat-pressure-monitoring.firebasestorage.app",
+  messagingSenderId: "718309136851",
+  appId: "1:718309136851:web:9141731b56f30478753726",
+  measurementId: "G-M2K527E5WB"
+};
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        
+        // Make db globally available to app.js if needed, or handle DB logic entirely within app.js
+        window.firebaseConfig = firebaseConfig;
+    </script>
+</head>
+<body>
+
+    <div class="dashboard">
+        <div class="left-pane">
+            <div class="header">
+                <span>Fleet Guard POC</span>
+                <span style="font-size: 0.9rem; font-weight: normal;">Route: Coimbatore → Chennai</span>
+            </div>
+
+            <div class="bus-container">
+                <div class="steering-wheel"></div>
+                <div class="seats-grid" id="seats-container">
+                    </div>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item"><div class="legend-box" style="background: var(--seat-empty); border: 2px solid #bdbdbd;"></div> Available</div>
+                <div class="legend-item"><div class="legend-box" style="background: white; border: 3px solid var(--seat-booked);"></div> Booked (Empty)</div>
+                <div class="legend-item"><div class="legend-box" style="background: var(--success-green);"></div> Valid Occupancy</div>
+                <div class="legend-item"><div class="legend-box" style="background: var(--alert-red);"></div> Alert / Unauthorized</div>
+            </div>
+        </div>
+
+        <div class="right-pane">
+            <div class="control-group">
+                <h3>Global Bus Status</h3>
+                <div class="control-row">
+                    <label>Current Location (GPS):</label>
+                    <select id="current-location">
+                        <option value="0">0 - Gandhipuram (Start)</option>
+                        <option value="1">1 - Saravanampati</option>
+                        <option value="2">2 - Erode</option>
+                        <option value="3">3 - Salem</option>
+                        <option value="4">4 - Chennai (Dest)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="control-group" id="seat-controls" style="opacity: 0.5; pointer-events: none;">
+                <h3>Seat Controls: <span id="selected-seat-label">None</span></h3>
+                
+                <div class="control-row">
+                    <label>Boarding Point:</label>
+                    <select id="boarding-point">
+                        <option value="0">0 - Gandhipuram</option>
+                        <option value="1" selected>1 - Saravanampati</option>
+                        <option value="2">2 - Erode</option>
+                        <option value="3">3 - Salem</option>
+                    </select>
+                </div>
+
+                <div class="control-row">
+                    <label>Ticket Booked (API):</label>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-booked">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="control-row">
+                    <label>Seat Sensor (Hardware):</label>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-occupied">
+                        <span class="slider" style="background-color: #ccc;"></span>
+                    </label>
+                </div>
+                
+                <div style="font-size: 0.8rem; color: #666; margin-top: 10px;">
+                    <strong>Rule active:</strong> Evaluates hardware sensor against booking data and live GPS.
+                </div>
+            </div>
+
+            <div class="control-group" style="flex: 1; display: flex; flex-direction: column; border-bottom: none;">
+                <h3>System Event Logs</h3>
+                <div class="log-container" id="log-container">
+                    <div class="log-entry">System initialized. Awaiting sensor telemetry.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="main.js"></script>
+</body>
+</html>
