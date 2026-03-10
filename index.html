@@ -34,6 +34,24 @@
           <span>ESP32</span>
         </div>
       </div>
+
+      <!-- Seater ↔ Sleeper mode toggle -->
+      <div class="mode-pill">
+        <button class="mode-pill-opt active" id="mode-btn-seater" data-mode="seater" title="Each sensor seat acts independently">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <path d="M2 9V5a6 6 0 0112 0v4M1 11h14v2a1 1 0 01-1 1H2a1 1 0 01-1-1v-2z"/>
+          </svg>
+          Seater
+        </button>
+        <button class="mode-pill-opt" id="mode-btn-sleeper" data-mode="sleeper" title="Both sensors must read 1 to verify berth">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <rect x="1" y="5" width="14" height="7" rx="1.5"/>
+            <path d="M1 9h14M4 5V3M12 5V3"/>
+          </svg>
+          Sleeper
+        </button>
+      </div>
+
       <button class="btn-book-header" id="btn-open-booking">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M10 4v12M4 10h12" stroke-linecap="round"/>
@@ -70,8 +88,30 @@
       </div>
     </div>
 
+    <!-- Route progress panel -->
+    <div class="route-panel">
+      <div class="route-panel-header">
+        <span class="route-panel-title">Bus Route</span>
+        <span class="route-current-badge">Now at: <strong id="current-stop-label">Coimbatore</strong></span>
+      </div>
+      <div class="route-track-wrap">
+        <div class="route-track-bar">
+          <div class="route-track-fill" id="route-progress" style="width:0%"></div>
+        </div>
+        <div class="route-stops" id="stop-track"></div>
+      </div>
+      <input type="range" id="stop-slider" class="stop-slider" min="0" max="4" value="0" step="1" aria-label="Current bus stop" />
+      <p class="route-hint">Drag slider or click a stop to update bus position. Bookings auto-release if passenger misses boarding by 2 stops.</p>
+    </div>
+
     <!-- Two-column bus layout (mirrors the RedBus image) -->
     <div class="bus-wrapper">
+
+      <!-- Mode status bar -->
+      <div class="bus-mode-bar">
+        <span class="bus-mode-label" id="bus-mode-label">Seater Mode &mdash; individual sensor per seat</span>
+        <span class="bus-mode-hint">IoT Seats: 1 &amp; 2</span>
+      </div>
 
       <!-- Driver section -->
       <div class="bus-driver-row">
@@ -106,6 +146,7 @@
       <div class="legend-item"><div class="ls ls-booked"></div><span>Booked (Not Seated)</span></div>
       <div class="legend-item"><div class="ls ls-verified"></div><span>Passenger Verified</span></div>
       <div class="legend-item"><div class="ls ls-unauth"></div><span>Unauthorized</span></div>
+      <div class="legend-item"><div class="ls ls-early"></div><span>Early Boarding</span></div>
       <div class="legend-item"><div class="ls ls-sensor"></div><span>IoT Sensor Active</span></div>
     </div>
 
@@ -130,7 +171,7 @@
     <div class="booking-drawer" id="booking-drawer" role="dialog" aria-label="Book a seat">
 
       <div class="drawer-header">
-        <h2>Book a Seat</h2>
+        <h2 id="drawer-h2">Book a Seat</h2>
         <button class="btn-icon" id="btn-close-drawer" aria-label="Close">
           <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round"/>
@@ -138,39 +179,107 @@
         </button>
       </div>
 
-      <p class="drawer-sub">Only IoT-monitored seats (1 &amp; 2) can be booked.</p>
+      <!-- ── BOOKING VIEW ──────────────────────────────────── -->
+      <div id="view-booking">
 
-      <!-- sensor-seat picker -->
-      <div class="drawer-section-label">Select Seat</div>
-      <div class="seat-pick-row">
-        <button class="seat-pick-btn" id="pick-seat_1" data-seat="seat_1">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-            <path d="M5 10V6a7 7 0 0114 0v4M3 14h18v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4z"/>
-          </svg>
-          <span>Seat 1</span>
-          <span class="pick-status" id="pick-status-seat_1">Available</span>
-        </button>
-        <button class="seat-pick-btn" id="pick-seat_2" data-seat="seat_2">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-            <path d="M5 10V6a7 7 0 0114 0v4M3 14h18v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4z"/>
-          </svg>
-          <span>Seat 2</span>
-          <span class="pick-status" id="pick-status-seat_2">Available</span>
-        </button>
-      </div>
+        <p class="drawer-sub" id="drawer-sub-text">Only IoT-monitored seats (1 &amp; 2) can be booked. Booking auto-releases if passenger hasn't boarded after 2 stops.</p>
 
-      <!-- name input -->
-      <div class="drawer-section-label">Passenger Name</div>
-      <input type="text" class="drawer-input" id="passenger-input"
-             placeholder="Enter full name..." maxlength="50" autocomplete="off" />
+        <p id="sleeper-mode-hint" class="sleeper-hint" style="display:none">Sleeper Berth 1-2 — occupancy confirmed when both pressure sensors are active.</p>
 
-      <!-- actions -->
-      <div class="drawer-actions">
-        <button class="drawer-btn-primary" id="btn-book">Confirm Booking</button>
-        <button class="drawer-btn-cancel"  id="btn-reset">Cancel Booking</button>
-      </div>
+        <!-- sensor-seat picker -->
+        <div class="drawer-section-label">Select Seat</div>
+        <div class="seat-pick-row" id="seat-pick-row">
 
-      <div class="drawer-feedback" id="feedback-msg"></div>
+          <!-- Berth button (sleeper mode only) -->
+          <button class="seat-pick-btn pick-berth-btn" id="pick-berth" data-seat="seat_1" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+              <rect x="2" y="7" width="20" height="10" rx="2"/>
+              <path d="M2 12h20M7 7V5M17 7V5"/>
+            </svg>
+            <span>Berth 1–2</span>
+            <span class="pick-status" id="pick-status-berth">Available</span>
+          </button>
+
+          <!-- Individual seat buttons (seater mode) -->
+          <button class="seat-pick-btn" id="pick-seat_1" data-seat="seat_1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+              <path d="M5 10V6a7 7 0 0114 0v4M3 14h18v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4z"/>
+            </svg>
+            <span>Seat 1</span>
+            <span class="pick-status" id="pick-status-seat_1">Available</span>
+          </button>
+          <button class="seat-pick-btn" id="pick-seat_2" data-seat="seat_2">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+              <path d="M5 10V6a7 7 0 0114 0v4M3 14h18v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4z"/>
+            </svg>
+            <span>Seat 2</span>
+            <span class="pick-status" id="pick-status-seat_2">Available</span>
+          </button>
+        </div>
+
+        <!-- stop selectors -->
+        <div class="drawer-section-label">Journey</div>
+        <div class="stop-select-row">
+          <div class="stop-select-group">
+            <label class="stop-select-label">From</label>
+            <select class="drawer-input drawer-select" id="from-stop"></select>
+          </div>
+          <div class="stop-arrow">&rarr;</div>
+          <div class="stop-select-group">
+            <label class="stop-select-label">To</label>
+            <select class="drawer-input drawer-select" id="to-stop"></select>
+          </div>
+        </div>
+
+        <!-- name input -->
+        <div class="drawer-section-label">Passenger Name</div>
+        <input type="text" class="drawer-input" id="passenger-input"
+               placeholder="Enter full name..." maxlength="50" autocomplete="off" />
+
+        <!-- actions -->
+        <div class="drawer-actions">
+          <button class="drawer-btn-primary" id="btn-book">Confirm Booking</button>
+          <button class="drawer-btn-cancel"  id="btn-reset">Cancel Booking</button>
+        </div>
+
+        <div class="drawer-feedback" id="feedback-msg"></div>
+
+      </div><!-- /#view-booking -->
+
+      <!-- ── DETAILS VIEW ────────────────────────────────────── -->
+      <div id="view-details" style="display:none">
+
+        <div class="detail-card">
+          <div class="detail-row">
+            <span class="detail-col-label">Unit</span>
+            <span class="detail-col-val" id="detail-label">—</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-col-label">Passenger</span>
+            <span class="detail-col-val" id="detail-passenger">—</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-col-label">From</span>
+            <span class="detail-col-val" id="detail-from">—</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-col-label">To</span>
+            <span class="detail-col-val" id="detail-to">—</span>
+          </div>
+          <div class="detail-row detail-row-last">
+            <span class="detail-col-label">Status</span>
+            <span class="detail-status-badge dsb-gray" id="detail-status">—</span>
+          </div>
+        </div>
+
+        <div class="drawer-actions" style="margin-top:16px">
+          <button class="drawer-btn-cancel" id="btn-cancel-detail">Cancel This Booking</button>
+          <button class="btn-text detail-close-btn" id="btn-close-detail">Close</button>
+        </div>
+
+        <div class="drawer-feedback" id="feedback-msg-detail"></div>
+
+      </div><!-- /#view-details -->
     </div>
   </div>
 
@@ -178,7 +287,7 @@
   <div class="alert-toast" id="alert-toast" aria-live="assertive">
     <div class="toast-icon">&#9888;</div>
     <div class="toast-body">
-      <div class="toast-title">Unauthorized Passenger</div>
+      <div class="toast-title" id="toast-title">Unauthorized Passenger</div>
       <div class="toast-msg" id="toast-msg">An unbooked seat is occupied.</div>
     </div>
     <button class="toast-close" id="btn-dismiss-alert" aria-label="Dismiss">&#10005;</button>

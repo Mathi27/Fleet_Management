@@ -738,3 +738,521 @@ html, body {
   .bus-aisle  { width: 20px; }
 }
 
+
+/* ── ROUTE PANEL ─────────────────────────────────────────────────── */
+.route-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 16px 20px 20px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+}
+.route-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.route-panel-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--tx-2);
+}
+.route-current-badge {
+  font-size: 0.75rem;
+  color: var(--tx-2);
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 20px;
+  padding: 3px 10px;
+}
+.route-current-badge strong { color: var(--accent); }
+
+.route-track-wrap {
+  position: relative;
+  padding: 24px 0 8px;
+}
+.route-track-bar {
+  position: absolute;
+  top: 30px;
+  left: 6px; right: 6px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+}
+.route-track-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+.route-stops {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+}
+.route-stop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: var(--tr);
+}
+.route-stop:hover .route-dot { transform: scale(1.3); }
+.route-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--border-strong);
+  transition: all var(--tr);
+  position: relative;
+  z-index: 1;
+}
+.route-label {
+  font-size: 0.62rem;
+  color: var(--tx-3);
+  text-align: center;
+  max-width: 60px;
+  line-height: 1.2;
+}
+.route-stop-passed .route-dot   { background: var(--accent); border-color: var(--accent); }
+.route-stop-passed .route-label { color: var(--accent); font-weight: 500; }
+.route-stop-current .route-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(25,118,210,0.2);
+  transform: scale(1.2);
+}
+.route-stop-current .route-label { color: var(--accent); font-weight: 700; }
+
+/* Range slider */
+.stop-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: transparent;
+  outline: none;
+  margin-top: 14px;
+  cursor: pointer;
+}
+.stop-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(25,118,210,0.4);
+  cursor: pointer;
+  transition: var(--tr);
+}
+.stop-slider::-webkit-slider-thumb:hover { transform: scale(1.15); }
+.stop-slider::-moz-range-thumb {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #fff;
+  cursor: pointer;
+}
+.route-hint {
+  font-size: 0.68rem;
+  color: var(--tx-3);
+  font-style: italic;
+  margin-top: 10px;
+  line-height: 1.4;
+}
+
+/* ── BOOKING DRAWER: JOURNEY STOPS ────────────────────────────────── */
+.stop-select-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.stop-select-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.stop-select-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--tx-2);
+}
+.stop-arrow {
+  font-size: 1.1rem;
+  color: var(--tx-3);
+  padding-bottom: 8px;
+  flex-shrink: 0;
+}
+.drawer-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+  cursor: pointer;
+}
+
+/* ── PAST DESTINATION SEAT ────────────────────────────────────────── */
+.gs-sensor-past {
+  opacity: 0.4;
+  cursor: default !important;
+  filter: grayscale(60%);
+}
+.gs-sensor-past:hover { transform: none !important; box-shadow: none !important; }
+
+/* ── RESPONSIVE — route panel ─────────────────────────────────────── */
+@media (max-width: 680px) {
+  .route-label { font-size: 0.55rem; max-width: 44px; }
+  .stop-select-row { flex-direction: column; }
+  .stop-arrow { padding-bottom: 0; align-self: center; transform: rotate(90deg); }
+}
+
+/* ── EARLY BOARDING SEAT ─────────────────────────────────────────── */
+.gs-sensor-early {
+  background: #fff7ed;
+  border-color: #fb923c;
+  color: #c2410c;
+  animation: seat-pulse-orange 1.3s infinite;
+}
+.gs-sensor-early .gs-icon { stroke: #ea580c; }
+@keyframes seat-pulse-orange {
+  0%,100% { box-shadow: 0 0 0 0   rgba(251,146,60,0.4); }
+  50%      { box-shadow: 0 0 0 8px rgba(251,146,60,0);   }
+}
+
+/* ── LEGEND: EARLY BOARDING ───────────────────────────────────────── */
+.ls-early { background: #fff7ed; border-color: #fb923c; }
+
+/* ── MODE TOGGLE PILL ─────────────────────────────────────────────── */
+.mode-pill {
+  display: flex;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  padding: 3px;
+  gap: 2px;
+}
+.mode-pill-opt {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 13px;
+  border: none;
+  border-radius: 20px;
+  background: transparent;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--tx-2);
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--tr);
+  white-space: nowrap;
+}
+.mode-pill-opt svg { width: 13px; height: 13px; flex-shrink: 0; }
+.mode-pill-opt.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 1px 6px rgba(25,118,210,0.3);
+}
+.mode-pill-opt.active svg { stroke: #fff; }
+.mode-pill-opt:not(.active):hover { background: var(--border); color: var(--tx-1); }
+
+/* ── BUS MODE BAR ─────────────────────────────────────────────────── */
+.bus-mode-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  margin-bottom: 14px;
+  background: var(--bg);
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  transition: background var(--tr), border-color var(--tr);
+}
+.bus-mode-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--tx-2);
+  transition: color var(--tr);
+}
+.bus-mode-hint {
+  font-size: 0.68rem;
+  color: var(--tx-3);
+}
+.sleeper-mode .bus-mode-bar {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+.sleeper-mode .bus-mode-label { color: var(--accent); font-weight: 700; }
+
+/* ── SLEEPER MODE GRID ────────────────────────────────────────────── */
+.sleeper-mode .gs-sensor { border-style: dashed; }
+.sleeper-mode .gs-sensor-empty {
+  background: #f0f4ff;
+  border-color: #a5b4fc;
+  color: #3730a3;
+}
+.sleeper-mode .gs-sensor-empty .gs-icon { stroke: #4338ca; }
+
+/* ── TOAST VARIANTS ───────────────────────────────────────────────── */
+.alert-toast.toast-warn {
+  border-left-color: var(--yellow);
+  border-color: #fde68a;
+}
+.alert-toast.toast-warn .toast-title { color: #92400e; }
+.alert-toast.toast-warn .toast-icon  { animation: none; }
+
+/* ── RESPONSIVE — mode pill ───────────────────────────────────────── */
+@media (max-width: 780px) {
+  .mode-pill .mode-pill-opt span:last-child { display: none; }
+  .mode-pill-opt { padding: 5px 10px; }
+}
+@media (max-width: 680px) {
+  .bus-mode-bar { flex-direction: column; align-items: flex-start; gap: 4px; }
+}
+
+/* ── SLEEPER BERTH CARD ─────────────────────────────────────────── */
+.sleeper-berth-row {
+  width: 100%;
+  margin-bottom: 4px;
+}
+.sleeper-berth {
+  width: 100% !important;
+  height: 170px !important;
+  border-style: dashed !important;
+  border-color: var(--accent) !important;
+  background: #f0f7ff !important;
+  position: relative;
+  cursor: pointer;
+}
+.sleeper-berth:hover { background: #e3f0ff !important; }
+.sleeper-berth .gs-icon { width: 32px !important; height: 32px !important; }
+.berth-sensors {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  justify-content: center;
+}
+.berth-s {
+  font-size: 0.58rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--border);
+  color: var(--tx-3);
+  transition: var(--tr);
+}
+.berth-s-on {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ── BERTH PICKER BUTTON ────────────────────────────────────────── */
+.pick-berth-btn {
+  width: 100% !important;
+  flex-direction: row !important;
+  justify-content: flex-start !important;
+  gap: 12px !important;
+  padding: 12px 14px !important;
+  height: auto !important;
+}
+.pick-berth-btn span:nth-child(2) {
+  flex: 1;
+  text-align: left;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+.pick-berth-btn .pick-status {
+  margin-left: auto;
+}
+
+/* ── SLEEPER MODE HINT ──────────────────────────────────────────── */
+.sleeper-hint {
+  font-size: 0.72rem;
+  color: var(--accent);
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 8px 12px;
+  border-radius: var(--r-md);
+  margin-bottom: 14px;
+  line-height: 1.45;
+}
+
+/* ── BOOKING DETAILS PANEL ──────────────────────────────────────── */
+.detail-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.detail-row-last { border-bottom: none; }
+.detail-col-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--tx-2);
+}
+.detail-col-val {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--tx-1);
+  text-align: right;
+}
+.detail-status-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.dsb-green  { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.dsb-red    { background: #fff5f5; color: #991b1b; border: 1px solid #fecaca; }
+.dsb-orange { background: #fff7ed; color: #c2410c; border: 1px solid #fcd34d; }
+.dsb-blue   { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.dsb-gray   { background: var(--bg); color: var(--tx-3); border: 1px solid var(--border); }
+
+/* Close (text) button in details view */
+.detail-close-btn {
+  display: block;
+  text-align: center;
+  width: 100%;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: var(--tx-2);
+}
+.detail-close-btn:hover { color: var(--tx-1); }
+
+/* ── SLEEPER BERTH CARD ─────────────────────────────────────────── */
+.sleeper-berth-row {
+  width: 100%;
+  margin-bottom: 4px;
+}
+.sleeper-berth {
+  width: 100% !important;
+  height: 170px !important;
+  border-style: dashed !important;
+  border-color: var(--accent) !important;
+  background: #f0f7ff !important;
+  position: relative;
+  cursor: pointer;
+}
+.sleeper-berth:hover { background: #e3f0ff !important; }
+.sleeper-berth .gs-icon { width: 32px !important; height: 32px !important; }
+.berth-sensors {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  justify-content: center;
+}
+.berth-s {
+  font-size: 0.58rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--border);
+  color: var(--tx-3);
+  transition: var(--tr);
+}
+.berth-s-on {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ── BERTH PICKER BUTTON ────────────────────────────────────────── */
+.pick-berth-btn {
+  width: 100% !important;
+  flex-direction: row !important;
+  justify-content: flex-start !important;
+  gap: 12px !important;
+  padding: 12px 14px !important;
+  height: auto !important;
+}
+.pick-berth-btn span:nth-child(2) {
+  flex: 1;
+  text-align: left;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+.pick-berth-btn .pick-status {
+  margin-left: auto;
+}
+
+/* ── SLEEPER MODE HINT ──────────────────────────────────────────── */
+.sleeper-hint {
+  font-size: 0.72rem;
+  color: var(--accent);
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 8px 12px;
+  border-radius: var(--r-md);
+  margin-bottom: 14px;
+  line-height: 1.45;
+}
+
+/* ── BOOKING DETAILS PANEL ──────────────────────────────────────── */
+.detail-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.detail-row-last { border-bottom: none; }
+.detail-col-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--tx-2);
+}
+.detail-col-val {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--tx-1);
+  text-align: right;
+}
+.detail-status-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.dsb-green  { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.dsb-red    { background: #fff5f5; color: #991b1b; border: 1px solid #fecaca; }
+.dsb-orange { background: #fff7ed; color: #c2410c; border: 1px solid #fcd34d; }
+.dsb-blue   { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.dsb-gray   { background: var(--bg); color: var(--tx-3); border: 1px solid var(--border); }
+
+/* Close (text) button in details view */
+.detail-close-btn {
+  display: block;
+  text-align: center;
+  width: 100%;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: var(--tx-2);
+}
+.detail-close-btn:hover { color: var(--tx-1); }
