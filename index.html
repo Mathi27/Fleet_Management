@@ -1,114 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fleet Guard - Revenue Assurance POC</title>
-    <link rel="stylesheet" href="styles.css">
-    
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-        
-        // TODO: Paste your Firebase config here later
-       const firebaseConfig = {
-  apiKey: "API_KEY",
-  authDomain: "auth_domain",
-  databaseURL: "DB_URL",
-  projectId: "PROJ_ID",
-  storageBucket: "bucketid",
-  messagingSenderId: "senderid",
-  appId: "1:appid",
-  measurementId: "G-id"
-};
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        
-        // Make db globally available to app.js if needed, or handle DB logic entirely within app.js
-        window.firebaseConfig = firebaseConfig;
-    </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Bus Seat Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-    <div class="dashboard">
-        <div class="left-pane">
-            <div class="header">
-                <span>Fleet Guard POC</span>
-                <span style="font-size: 0.9rem; font-weight: normal;">Route: Coimbatore → Chennai</span>
-            </div>
-
-            <div class="bus-container">
-                <div class="steering-wheel"></div>
-                <div class="seats-grid" id="seats-container">
-                    </div>
-            </div>
-
-            <div class="legend">
-                <div class="legend-item"><div class="legend-box" style="background: var(--seat-empty); border: 2px solid #bdbdbd;"></div> Available</div>
-                <div class="legend-item"><div class="legend-box" style="background: white; border: 3px solid var(--seat-booked);"></div> Booked (Empty)</div>
-                <div class="legend-item"><div class="legend-box" style="background: var(--success-green);"></div> Valid Occupancy</div>
-                <div class="legend-item"><div class="legend-box" style="background: var(--alert-red);"></div> Alert / Unauthorized</div>
-            </div>
+  <!-- ══ HEADER ══════════════════════════════════════════════ -->
+  <header class="app-header">
+    <div class="header-brand">
+      <svg class="brand-bus-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <rect x="2" y="5" width="20" height="13" rx="2"/>
+        <path d="M2 10h20M7 18v2M17 18v2M6 14h.01M18 14h.01"/>
+      </svg>
+      <div class="brand-text">
+        <h1>Smart Bus Seat Monitor</h1>
+        <span>Route: Coimbatore &rarr; Chennai</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="connection-badges">
+        <div class="badge" id="badge-firebase">
+          <span class="badge-dot" id="dot-firebase"></span>
+          <span>Firebase</span>
         </div>
-
-        <div class="right-pane">
-            <div class="control-group">
-                <h3>Global Bus Status</h3>
-                <div class="control-row">
-                    <label>Current Location (GPS):</label>
-                    <select id="current-location">
-                        <option value="0">0 - Gandhipuram (Start)</option>
-                        <option value="1">1 - Saravanampati</option>
-                        <option value="2">2 - Erode</option>
-                        <option value="3">3 - Salem</option>
-                        <option value="4">4 - Chennai (Dest)</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="control-group" id="seat-controls" style="opacity: 0.5; pointer-events: none;">
-                <h3>Seat Controls: <span id="selected-seat-label">None</span></h3>
-                
-                <div class="control-row">
-                    <label>Boarding Point:</label>
-                    <select id="boarding-point">
-                        <option value="0">0 - Gandhipuram</option>
-                        <option value="1" selected>1 - Saravanampati</option>
-                        <option value="2">2 - Erode</option>
-                        <option value="3">3 - Salem</option>
-                    </select>
-                </div>
-
-                <div class="control-row">
-                    <label>Ticket Booked (API):</label>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-booked">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-
-                <div class="control-row">
-                    <label>Seat Sensor (Hardware):</label>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-occupied">
-                        <span class="slider" style="background-color: #ccc;"></span>
-                    </label>
-                </div>
-                
-                <div style="font-size: 0.8rem; color: #666; margin-top: 10px;">
-                    <strong>Rule active:</strong> Evaluates hardware sensor against booking data and live GPS.
-                </div>
-            </div>
-
-            <div class="control-group" style="flex: 1; display: flex; flex-direction: column; border-bottom: none;">
-                <h3>System Event Logs</h3>
-                <div class="log-container" id="log-container">
-                    <div class="log-entry">System initialized. Awaiting sensor telemetry.</div>
-                </div>
-            </div>
+        <div class="badge" id="badge-esp32">
+          <span class="badge-dot" id="dot-esp32"></span>
+          <span>ESP32</span>
         </div>
+      </div>
+      <button class="btn-book-header" id="btn-open-booking">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10 4v12M4 10h12" stroke-linecap="round"/>
+        </svg>
+        Book Seat
+      </button>
+    </div>
+  </header>
+
+  <!-- ══ MAIN MONITORING PAGE ══════════════════════════════════ -->
+  <main class="main-content">
+
+    <!-- Top stat strip -->
+    <div class="stat-strip">
+      <div class="stat-box">
+        <div class="stat-val" id="stat-total">40</div>
+        <div class="stat-lbl">Total Seats</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="stat-available">2</div>
+        <div class="stat-lbl">Available</div>
+      </div>
+      <div class="stat-box c-blue">
+        <div class="stat-val" id="stat-booked">0</div>
+        <div class="stat-lbl">Booked</div>
+      </div>
+      <div class="stat-box c-green">
+        <div class="stat-val" id="stat-verified">0</div>
+        <div class="stat-lbl">Verified</div>
+      </div>
+      <div class="stat-box c-red">
+        <div class="stat-val" id="stat-unauth">0</div>
+        <div class="stat-lbl">Alerts</div>
+      </div>
     </div>
 
-    <script type="module" src="main.js"></script>
+    <!-- Two-column bus layout (mirrors the RedBus image) -->
+    <div class="bus-wrapper">
+
+      <!-- Driver section -->
+      <div class="bus-driver-row">
+        <div class="driver-box">Driver</div>
+      </div>
+
+      <!-- Left column (seats 1–20) + Right column (seats 21–40) -->
+      <div class="bus-columns">
+
+        <!-- LEFT HALF -->
+        <div class="seat-column" id="col-left">
+          <!-- rows built by JS -->
+        </div>
+
+        <!-- Aisle -->
+        <div class="bus-aisle">
+          <span>A</span><span>I</span><span>S</span><span>L</span><span>E</span>
+        </div>
+
+        <!-- RIGHT HALF -->
+        <div class="seat-column" id="col-right">
+          <!-- rows built by JS -->
+        </div>
+
+      </div><!-- /bus-columns -->
+    </div><!-- /bus-wrapper -->
+
+    <!-- Legend -->
+    <div class="legend">
+      <div class="legend-item"><div class="ls ls-empty"></div><span>Available</span></div>
+      <div class="legend-item"><div class="ls ls-sold"></div><span>Sold / Static</span></div>
+      <div class="legend-item"><div class="ls ls-booked"></div><span>Booked (Not Seated)</span></div>
+      <div class="legend-item"><div class="ls ls-verified"></div><span>Passenger Verified</span></div>
+      <div class="legend-item"><div class="ls ls-unauth"></div><span>Unauthorized</span></div>
+      <div class="legend-item"><div class="ls ls-sensor"></div><span>IoT Sensor Active</span></div>
+    </div>
+
+    <!-- Event log -->
+    <div class="log-card">
+      <div class="log-card-header">
+        <span class="log-title">Event Log</span>
+        <button class="btn-text" id="btn-clear-log">Clear</button>
+      </div>
+      <div class="log-body" id="log-body">
+        <div class="log-entry log-info">
+          <span class="log-time">[--:--:--]</span>
+          <span>System initialised. Awaiting sensor data...</span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ══ BOOKING DRAWER / MODAL ════════════════════════════════ -->
+  <div class="drawer-overlay" id="drawer-overlay" aria-hidden="true">
+    <div class="booking-drawer" id="booking-drawer" role="dialog" aria-label="Book a seat">
+
+      <div class="drawer-header">
+        <h2>Book a Seat</h2>
+        <button class="btn-icon" id="btn-close-drawer" aria-label="Close">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M5 5l10 10M15 5L5 15" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <p class="drawer-sub">Only IoT-monitored seats (1 &amp; 2) can be booked.</p>
+
+      <!-- sensor-seat picker -->
+      <div class="drawer-section-label">Select Seat</div>
+      <div class="seat-pick-row">
+        <button class="seat-pick-btn" id="pick-seat_1" data-seat="seat_1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+            <path d="M5 10V6a7 7 0 0114 0v4M3 14h18v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4z"/>
+          </svg>
+          <span>Seat 1</span>
+          <span class="pick-status" id="pick-status-seat_1">Available</span>
+        </button>
+        <button class="seat-pick-btn" id="pick-seat_2" data-seat="seat_2">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+            <path d="M5 10V6a7 7 0 0114 0v4M3 14h18v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4z"/>
+          </svg>
+          <span>Seat 2</span>
+          <span class="pick-status" id="pick-status-seat_2">Available</span>
+        </button>
+      </div>
+
+      <!-- name input -->
+      <div class="drawer-section-label">Passenger Name</div>
+      <input type="text" class="drawer-input" id="passenger-input"
+             placeholder="Enter full name..." maxlength="50" autocomplete="off" />
+
+      <!-- actions -->
+      <div class="drawer-actions">
+        <button class="drawer-btn-primary" id="btn-book">Confirm Booking</button>
+        <button class="drawer-btn-cancel"  id="btn-reset">Cancel Booking</button>
+      </div>
+
+      <div class="drawer-feedback" id="feedback-msg"></div>
+    </div>
+  </div>
+
+  <!-- ══ UNAUTHORIZED ALERT TOAST ══════════════════════════════ -->
+  <div class="alert-toast" id="alert-toast" aria-live="assertive">
+    <div class="toast-icon">&#9888;</div>
+    <div class="toast-body">
+      <div class="toast-title">Unauthorized Passenger</div>
+      <div class="toast-msg" id="toast-msg">An unbooked seat is occupied.</div>
+    </div>
+    <button class="toast-close" id="btn-dismiss-alert" aria-label="Dismiss">&#10005;</button>
+  </div>
+
+  <script src="main.js"></script>
 </body>
 </html>

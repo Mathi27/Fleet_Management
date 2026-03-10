@@ -1,67 +1,89 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
-#define WIFI_SSID "ssid podanum."
-#define WIFI_PASSWORD "password podanum"
-String firebaseHost = "----enter api key-----";
-const int sensorPin = 34;
-const int Led = 2;
-const int Buzzer = 4;
 
-void setup() {
+#define WIFI_SSID "ANISH"
+#define WIFI_PASSWORD "12345678"
 
-  Serial.begin(115200);
+#define SEAT1_PIN 34
+#define SEAT2_PIN 35
 
-  pinMode(Led, OUTPUT);
-  pinMode(Buzzer, OUTPUT);
+#define PRESSURE_THRESHOLD 1000
+#define UPDATE_INTERVAL 2000
 
+String firebaseSeat1 = "https://seat-pressure-monitoring-default-rtdb.asia-southeast1.firebasedatabase.app/seat_monitor/seats/seat_1/sensor.json";
+String firebaseSeat2 = "https://seat-pressure-monitoring-default-rtdb.asia-southeast1.firebasedatabase.app/seat_monitor/seats/seat_2/sensor.json";
+
+unsigned long lastUpdate = 0;
+
+void connectWiFi()
+{
+  WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   Serial.print("Connecting");
 
-  while (WiFi.status() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED)
+  {
     Serial.print(".");
     delay(500);
   }
 
   Serial.println();
-  Serial.println("WiFi Connected");
+  Serial.print("IP: ");
+  Serial.println(WiFi.localIP());
 }
 
-void loop() {
-
-  int value = analogRead(sensorPin);
-
-  Serial.print("Pressure Value: ");
-  Serial.println(value);
-
-  String status;
-
-  if(value > 1000){
-    digitalWrite(Led,HIGH);
-    digitalWrite(Buzzer,HIGH);
-    status = "Person Present";
-  }
-  else{
-    digitalWrite(Led,LOW);
-    digitalWrite(Buzzer,LOW);
-    status = "No Person";
-  }
-
-  if(WiFi.status()== WL_CONNECTED){
-
+void sendToFirebase(String url, int value)
+{
+  if (WiFi.status() == WL_CONNECTED)
+  {
     HTTPClient http;
-
-    String url = firebaseHost + "/seat_monitor.json";
 
     http.begin(url);
     http.addHeader("Content-Type", "application/json");
 
-    String json = "{\"pressure_value\":" + String(value) + ",\"status\":\"" + status + "\"}";
+    String data = String(value);
 
-    int httpResponseCode = http.PUT(json);
-    Serial.print("Firebase Response: ");
+    int httpResponseCode = http.PUT(data);
+
+    Serial.print("HTTP Response: ");
     Serial.println(httpResponseCode);
+
     http.end();
   }
-  delay(1000);
+}
+
+void setup()
+{
+  Serial.begin(115200);
+
+  connectWiFi();
+}
+
+void loop()
+{
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    connectWiFi();
+  }
+
+  unsigned long now = millis();
+
+  if (now - lastUpdate < UPDATE_INTERVAL) return;
+
+  lastUpdate = now;
+
+  int raw1 = analogRead(SEAT1_PIN);
+  int raw2 = analogRead(SEAT2_PIN);
+
+  int seat1 = raw1 >= PRESSURE_THRESHOLD ? 1 : 0;
+  int seat2 = raw2 >= PRESSURE_THRESHOLD ? 1 : 0;
+
+  Serial.print("Seat1: ");
+  Serial.print(raw1);
+  Serial.print("  Seat2: ");
+  Serial.println(raw2);
+
+  sendToFirebase(firebaseSeat1, seat1);
+  sendToFirebase(firebaseSeat2, seat2);
 }
