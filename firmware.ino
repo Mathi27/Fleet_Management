@@ -3,8 +3,8 @@
 #include <ArduinoJson.h>
 
 // ── WIFI ──────────────────────────────────────────────────────────
-#define WIFI_SSID     "ANISH"
-#define WIFI_PASSWORD "12345678"
+#define WIFI_SSID     " "
+#define WIFI_PASSWORD " "
 
 // ── PINS ──────────────────────────────────────────────────────────
 #define SEAT1_PIN 34
